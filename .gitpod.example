@@ -1,0 +1,43 @@
+image:
+  file: .gitpod.Dockerfile
+tasks:
+  - name: Dev
+    before: sudo mount -t tmpfs shm -osize=4096m /dev/shm
+#    init: pnpm install
+#    command: pnpm run dev
+vscode:
+  extensions:
+    - vivaxy.vscode-conventional-commits
+    - tabnine.tabnine-vscode
+    - sonarsource.sonarlint-vscode
+    - bradlc.vscode-tailwindcss
+    - lokalise.i18n-ally
+jetbrains:
+  webstorm:
+    plugins:
+      - com.github.copilot
+    prebuilds:
+      version: stable
+ports:
+  - name: Next
+    description: Next dev server
+    port: 3000
+    onOpen: open-preview
+  - name: Icon
+    description: SVG icon preview server
+    port: 8000
+    onOpen: ignore
+  - name: VNC
+    description: full GUI Virtual
+    port: 6080
+    onOpen: open-browser
+  - name: TabNine
+    description: TabNine GUI
+    port: 5555
+    onOpen: ignore
+  - name: Internal
+    description: Gitpod default internal services
+    port:
+      - 5990
+      - 6942
+    onOpen: ignore

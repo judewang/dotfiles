@@ -16,6 +16,16 @@ for file in ~/.dotfiles/files/*; do
   cp file $CURRENT
 done
 
+echo "Check Gitpod config"
+
+FILE=${CURRENT}/.gitpod
+if [ -f "$FILE" ]; then
+    echo "$FILE exists. Skip copy .gitpod"
+else 
+    echo "$FILE does not exist. Copying default .gitpod"
+    cp ~/.dotfiles/.gitpod.example ${CURRENT}/.gitpod
+fi
+
 cd $CURRENT
 
 rm -rf $TMPDIR
