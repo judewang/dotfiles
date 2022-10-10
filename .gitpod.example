@@ -37,7 +37,5 @@ ports:
     onOpen: ignore
   - name: Internal
     description: Gitpod default internal services
-    port:
-      - 5990
-      - 6942
+    port: 5990-6942
     onOpen: ignore
