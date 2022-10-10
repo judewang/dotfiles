@@ -8,25 +8,23 @@ echo "Copy VNC resources"
 
 TMPDIR=$(mktemp -d)
 
-CURRENT=$PWD
-
 cd $TMPDIR
 
 for file in ~/.dotfiles/files/*; do
-  cp $file $CURRENT
+  cp $file $GITPOD_REPO_ROOT
 done
 
 echo "Check Gitpod config"
 
-FILE=${CURRENT}/.gitpod
+FILE=${GITPOD_REPO_ROOT}/.gitpod
 if [ -f "$FILE" ]; then
     echo "$FILE exists. Skip copy .gitpod"
 else 
     echo "$FILE does not exist. Copying default .gitpod"
-    cp ~/.dotfiles/.gitpod.example ${CURRENT}/.gitpod
+    cp ~/.dotfiles/.gitpod.example ${GITPOD_REPO_ROOT}/.gitpod
 fi
 
-cd $CURRENT
+cd $GITPOD_REPO_ROOT
 
 rm -rf $TMPDIR
 
