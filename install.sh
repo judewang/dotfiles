@@ -13,7 +13,7 @@ CURRENT=$PWD
 cd $TMPDIR
 
 for file in ~/.dotfiles/files/*; do
-  cp file $CURRENT
+  cp $file $CURRENT
 done
 
 echo "Check Gitpod config"
