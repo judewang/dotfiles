@@ -28,7 +28,7 @@ RUN printf '%s\n' '#!/bin/sh' \
                     'exec dbus-launch --exit-with-session xfce4-session' > "$HOME/.xdesktop.xfce"
 
 COPY --chown=gitpod:gitpod .Xresources $HOME/
-COPY --chown=gitpod:gitpod .xinitrc $HOME/.xinitrc
+COPY --chown=gitpod:gitpod .xinitrc $HOME/
 
 RUN curl -L -O https://github.com/google/fonts/raw/main/ofl/notosanstc/NotoSansTC-Black.otf
 RUN curl -L -O https://github.com/google/fonts/raw/main/ofl/notosanstc/NotoSansTC-Bold.otf
