@@ -1,8 +1,9 @@
 #!/bin/bash
 
-echo "Add default packages to nvm config"
-touch $HOME/.nvm/default-packages
-echo -e "@sanity/cli\nvercel\ncommitizen\ncz-conventional-changelog" >> $HOME/.nvm/default-packages
+# No more use nvm in workspace
+# echo "Add default packages to nvm config"
+# touch $HOME/.nvm/default-packages
+# echo -e "@sanity/cli\nvercel\ncommitizen\ncz-conventional-changelog" >> $HOME/.nvm/default-packages
 
 echo "Check Gitpod config"
 
@@ -12,8 +13,9 @@ if [ -f "$FILE" ]; then
 else
     echo "$FILE does not exist. Copying default .gitpod.yml"
     cp ~/.dotfiles/.gitpod.yml ${GITPOD_REPO_ROOT}/.gitpod.yml
-    echo "Copy VNC resources"
-    cp -r ~/.dotfiles/files/. $GITPOD_REPO_ROOT
+    cp ~/.dotfiles/.gitpod.Dockerfile ${GITPOD_REPO_ROOT}/.gitpod.Dockerfile
+    # echo "Copy VNC resources"
+    # cp -r ~/.dotfiles/files/. $GITPOD_REPO_ROOT
 fi
 
 cd $GITPOD_REPO_ROOT
