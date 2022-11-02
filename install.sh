@@ -13,7 +13,7 @@ if [ -f "$FILE" ]; then
 else
     echo "$FILE does not exist. Copying default .gitpod.yml"
     cp ~/.dotfiles/.gitpod.yml ${GITPOD_REPO_ROOT}/.gitpod.yml
-    cp ~/.dotfiles/.gitpod.Dockerfile ${GITPOD_REPO_ROOT}/.gitpod.Dockerfile
+    # cp ~/.dotfiles/.gitpod.Dockerfile ${GITPOD_REPO_ROOT}/.gitpod.Dockerfile
     # echo "Copy VNC resources"
     # cp -r ~/.dotfiles/files/. $GITPOD_REPO_ROOT
 fi
