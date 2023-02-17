@@ -5,7 +5,6 @@ tasks:
 vscode:
   extensions:
     - vivaxy.vscode-conventional-commits
-    - tabnine.tabnine-vscode
     - sonarsource.sonarlint-vscode
     - bradlc.vscode-tailwindcss
     - lokalise.i18n-ally
