@@ -1,9 +1,8 @@
 #!/bin/bash
 
-# No more use nvm in workspace
-# echo "Add default packages to nvm config"
-# touch $HOME/.nvm/default-packages
-# echo -e "@sanity/cli\nvercel\ncommitizen\ncz-conventional-changelog" >> $HOME/.nvm/default-packages
+echo "Add default packages to nvm config"
+touch $HOME/.nvm/default-packages
+echo -e "@sanity/cli\nvercel\ncommitizen\ncz-conventional-changelog" >> $HOME/.nvm/default-packages
 
 echo "Check Gitpod config"
 
