@@ -1,5 +1,9 @@
 # Neovim plugin cache (lazy.nvim will re-download)
 nvim/plugin/
 
+# Ghostty live config (machine-specific, modified by switch scripts)
+ghostty/config
+ghostty/*.bak
+
 # OS files
 .DS_Store

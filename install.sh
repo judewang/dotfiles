@@ -81,6 +81,19 @@ if [ -z "$SKIP_GHOSTTY" ]; then
               "Ghostty"
 fi
 
+# --- Initialize machine-local files ---
+
+# Ghostty: create config from default if not present
+if [ -z "$SKIP_GHOSTTY" ]; then
+    ghostty_config="${DOTFILES_DIR}/ghostty/config"
+    if [ ! -f "$ghostty_config" ]; then
+        cp "${DOTFILES_DIR}/ghostty/config.default" "$ghostty_config"
+        info "Ghostty: created config from default template"
+    else
+        info "Ghostty: config already exists (keeping current)"
+    fi
+fi
+
 # --- Post-install ---
 
 echo ""
