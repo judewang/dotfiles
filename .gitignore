@@ -1,0 +1,5 @@
+# Neovim plugin cache (lazy.nvim will re-download)
+nvim/plugin/
+
+# OS files
+.DS_Store
