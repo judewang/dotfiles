@@ -1,4 +1,5 @@
-# Neovim plugin cache (lazy.nvim will re-download)
+# Neovim generated files (lazy.nvim lock, plugin cache, state, etc.)
+nvim/lazy-lock.json
 nvim/plugin/
 
 # Ghostty live config (machine-specific, modified by switch scripts)
