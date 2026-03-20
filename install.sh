@@ -67,11 +67,15 @@ link_item "${DOTFILES_DIR}/claude/statusline-command.sh" \
           ~/.claude/statusline-command.sh \
           "Claude statusline"
 
-# Neovim
-mkdir -p ~/.config
-link_item "${DOTFILES_DIR}/nvim" \
-          ~/.config/nvim \
-          "Neovim"
+# Neovim — symlink individual items so NeoVim-generated files
+# (lazy-lock.json, plugin/, etc.) stay in ~/.config/nvim/ and don't pollute the repo
+mkdir -p ~/.config/nvim
+link_item "${DOTFILES_DIR}/nvim/init.lua" \
+          ~/.config/nvim/init.lua \
+          "Neovim init.lua"
+link_item "${DOTFILES_DIR}/nvim/lua" \
+          ~/.config/nvim/lua \
+          "Neovim lua/"
 
 # Ghostty
 if [ -z "$SKIP_GHOSTTY" ]; then
@@ -99,7 +103,8 @@ fi
 echo ""
 info "Done! Summary:"
 echo "  Claude statusline → ~/.claude/statusline-command.sh"
-echo "  Neovim            → ~/.config/nvim"
+echo "  Neovim init.lua   → ~/.config/nvim/init.lua"
+echo "  Neovim lua/       → ~/.config/nvim/lua/"
 [ -z "$SKIP_GHOSTTY" ] && echo "  Ghostty           → ~/.config/ghostty"
 echo ""
 info "Open Neovim to auto-install plugins: nvim"
