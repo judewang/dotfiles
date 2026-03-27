@@ -54,6 +54,7 @@ show_themes() {
     echo -e "${YELLOW}  dracula${NC}            - Classic gothic elegance"
     echo -e "${YELLOW}  nord${NC}               - Arctic minimalism"
     echo -e "${YELLOW}  gruvbox${NC}            - Retro warmth"
+    echo -e "${YELLOW}  snazzy${NC}             - Bold & vibrant"
 }
 
 show_fonts() {

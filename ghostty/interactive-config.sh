@@ -162,11 +162,12 @@ show_theme_menu() {
     echo -e "${CYAN}3)${NC} ${GREEN}Dracula${NC}              ${GRAY}(Gothic elegance, rich purples)${NC}"
     echo -e "${CYAN}4)${NC} ${GREEN}Nord${NC}                 ${GRAY}(Arctic minimalism, cool blues)${NC}"
     echo -e "${CYAN}5)${NC} ${GREEN}Gruvbox${NC}              ${GRAY}(Retro warmth, earth tones)${NC}"
+    echo -e "${CYAN}6)${NC} ${GREEN}Snazzy${NC}               ${GRAY}(Bold primaries, vibrant accents)${NC}"
     echo ""
     echo -e "${CYAN}0)${NC} ${YELLOW}Back to main menu${NC}"
     echo ""
 
-    read -p "Choose your theme (0-5): " choice
+    read -p "Choose your theme (0-6): " choice
 
     case $choice in
         1) apply_config_with_feedback "$GHOSTTY_DIR/themes/catppuccin-mocha.conf" "Catppuccin Mocha" "theme" ;;
@@ -174,6 +175,7 @@ show_theme_menu() {
         3) apply_config_with_feedback "$GHOSTTY_DIR/themes/dracula.conf" "Dracula" "theme" ;;
         4) apply_config_with_feedback "$GHOSTTY_DIR/themes/nord.conf" "Nord" "theme" ;;
         5) apply_config_with_feedback "$GHOSTTY_DIR/themes/gruvbox.conf" "Gruvbox" "theme" ;;
+        6) apply_config_with_feedback "$GHOSTTY_DIR/themes/snazzy.conf" "Snazzy" "theme" ;;
         0) return ;;
         *)
             echo -e "${RED}Invalid choice. Please try again.${NC}"
@@ -250,7 +252,7 @@ show_about() {
     echo -e "${WHITE}This tool helps you customize your Ghostty terminal with:${NC}"
     echo ""
     echo -e "  ${CHECKMARK} ${GREEN}4 Curated Presets${NC} - Perfect combinations for different use cases"
-    echo -e "  ${CHECKMARK} ${GREEN}5 Beautiful Themes${NC} - From cyberpunk to minimalist aesthetics"
+    echo -e "  ${CHECKMARK} ${GREEN}6 Beautiful Themes${NC} - From cyberpunk to minimalist aesthetics"
     echo -e "  ${CHECKMARK} ${GREEN}4 Optimized Fonts${NC} - Typography designed for coding"
     echo -e "  ${CHECKMARK} ${GREEN}Instant Switching${NC} - No manual configuration needed"
     echo ""
