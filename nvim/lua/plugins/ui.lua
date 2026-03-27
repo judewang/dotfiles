@@ -1,35 +1,34 @@
 return {
-  -- Catppuccin theme
+  -- Tokyonight theme with Glow-inspired syntax overrides
   {
-    "catppuccin/nvim",
-    name = "catppuccin",
+    "folke/tokyonight.nvim",
     priority = 1000,
     lazy = false,
     opts = {
-      flavour = "mocha",
-      integrations = {
-        cmp = true,
-        gitsigns = true,
-        treesitter = true,
-        neo_tree = true,
-        indent_blankline = { enabled = true },
-        native_lsp = {
-          enabled = true,
-          underlines = {
-            errors = { "undercurl" },
-            hints = { "undercurl" },
-            warnings = { "undercurl" },
-            information = { "undercurl" },
-          },
-        },
-        telescope = { enabled = true },
-        which_key = true,
-        flash = true,
-      },
+      style = "storm",
+      on_highlights = function(hl, c)
+        -- Glow-inspired overrides: brighter keywords, warmer strings, vivid functions
+        hl["@keyword"]          = { fg = "#00AAFF" }
+        hl["@keyword.function"] = { fg = "#00AAFF" }
+        hl["@keyword.return"]   = { fg = "#00AAFF" }
+        hl["Keyword"]           = { fg = "#00AAFF" }
+        hl["Conditional"]       = { fg = "#00AAFF" }
+        hl["Repeat"]            = { fg = "#00AAFF" }
+        hl["Statement"]         = { fg = "#00AAFF" }
+        hl["@string"]           = { fg = "#C69669" }
+        hl["String"]            = { fg = "#C69669" }
+        hl["@function"]         = { fg = "#00D787" }
+        hl["@function.call"]    = { fg = "#00D787" }
+        hl["Function"]          = { fg = "#00D787" }
+        hl["@number"]           = { fg = "#6EEFC0" }
+        hl["Number"]            = { fg = "#6EEFC0" }
+        hl["@boolean"]          = { fg = "#6EEFC0" }
+        hl["Boolean"]           = { fg = "#6EEFC0" }
+      end,
     },
     config = function(_, opts)
-      require("catppuccin").setup(opts)
-      vim.cmd.colorscheme("catppuccin")
+      require("tokyonight").setup(opts)
+      vim.cmd.colorscheme("tokyonight")
     end,
   },
 
@@ -43,7 +42,7 @@ return {
     dependencies = { "nvim-tree/nvim-web-devicons" },
     opts = {
       options = {
-        theme = "catppuccin",
+        theme = "auto",
         globalstatus = true,
         component_separators = { left = "", right = "" },
         section_separators = { left = "", right = "" },
