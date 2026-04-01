@@ -89,55 +89,12 @@ build_bar() {
     echo -e "${bar_color}${bar}${RESET}${empty_color}${empty_part}${RESET}"
 }
 
-# Convert ISO 8601 timestamp to epoch seconds (macOS / Linux)
-iso_to_epoch() {
-    local ts="$1"
-    local is_utc=0
-    if [[ "$ts" == *"Z" ]] || [[ "$ts" == *"+00:00" ]] || [[ "$ts" == *"+0000" ]]; then
-        is_utc=1
-    fi
-    # Try GNU date first
-    if epoch=$(date -d "$ts" +%s 2>/dev/null); then
-        echo "$epoch"; return
-    fi
-    # macOS BSD date fallback
-    local clean="${ts%%.*}"          # strip fractional seconds
-    clean="${clean%%Z}"              # strip Z
-    clean="${clean%%+*}"             # strip +offset
-    if [[ $is_utc -eq 1 ]]; then
-        epoch=$(TZ=UTC date -j -f "%Y-%m-%dT%H:%M:%S" "$clean" +%s 2>/dev/null)
-    else
-        epoch=$(date -j -f "%Y-%m-%dT%H:%M:%S" "$clean" +%s 2>/dev/null)
-    fi
-    echo "${epoch:-0}"
-}
-
-# Format reset time for display
-# style "time"     -> 7:00pm  (for current / 5-hour window)
-# style "datetime" -> mar 10, 10:00am  (for weekly / 7-day window)
-format_reset_time() {
-    local iso_ts="$1"
-    local style="${2:-time}"
-    local epoch
-    epoch=$(iso_to_epoch "$iso_ts")
-    [[ "$epoch" == "0" ]] && { echo "?"; return; }
-    if [[ "$style" == "time" ]]; then
-        date -j -f "%s" "$epoch" "+%-I:%M%p" 2>/dev/null | tr '[:upper:]' '[:lower:]'
-    elif [[ "$style" == "datetime" ]]; then
-        local mon day time_part
-        mon=$(date -j -f "%s" "$epoch" "+%b" 2>/dev/null | tr '[:upper:]' '[:lower:]')
-        day=$(date -j -f "%s" "$epoch" "+%-d" 2>/dev/null)
-        time_part=$(date -j -f "%s" "$epoch" "+%-I:%M%p" 2>/dev/null | tr '[:upper:]' '[:lower:]')
-        echo "${mon} ${day}, ${time_part}"
-    fi
-}
-
 # Format reset time as countdown (e.g., "2h 15m", "5d 21h", "45m")
+# Accepts epoch seconds directly from Claude Code's stdin JSON
 format_countdown() {
-    local iso_ts="$1"
-    local epoch now diff
-    epoch=$(iso_to_epoch "$iso_ts")
-    [[ "$epoch" == "0" ]] && { echo "?"; return; }
+    local epoch="$1"
+    [[ -z "$epoch" ]] || [[ "$epoch" == "0" ]] && { echo "?"; return; }
+    local now diff
     now=$(date +%s)
     diff=$(( epoch - now ))
     if [[ "$diff" -le 0 ]]; then
@@ -157,71 +114,6 @@ format_countdown() {
     fi
 }
 
-# Get OAuth token from macOS Keychain or credentials file
-get_oauth_token() {
-    # 1. Environment variable
-    if [[ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]]; then
-        echo "$CLAUDE_CODE_OAUTH_TOKEN"; return
-    fi
-    # 2. macOS Keychain
-    local kc_json
-    kc_json=$(security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null)
-    if [[ -n "$kc_json" ]]; then
-        local token
-        token=$(echo "$kc_json" | jq -r '.claudeAiOauth.accessToken // empty' 2>/dev/null)
-        if [[ -n "$token" ]]; then echo "$token"; return; fi
-    fi
-    # 3. Credentials file
-    if [[ -f "$HOME/.claude/.credentials.json" ]]; then
-        local token
-        token=$(jq -r '.claudeAiOauth.accessToken // empty' "$HOME/.claude/.credentials.json" 2>/dev/null)
-        if [[ -n "$token" ]]; then echo "$token"; return; fi
-    fi
-    echo ""
-}
-
-# Fetch usage data with caching (60s TTL)
-fetch_usage() {
-    local cache_dir="/tmp/claude"
-    local cache_file="${cache_dir}/statusline-usage-cache.json"
-    local cache_max_age=60
-
-    mkdir -p "$cache_dir"
-
-    # Check cache freshness
-    if [[ -f "$cache_file" ]]; then
-        local now file_mod age
-        now=$(date +%s)
-        file_mod=$(stat -f %m "$cache_file" 2>/dev/null || stat -c %Y "$cache_file" 2>/dev/null || echo 0)
-        age=$(( now - file_mod ))
-        if [[ "$age" -lt "$cache_max_age" ]]; then
-            cat "$cache_file"; return
-        fi
-    fi
-
-    local token
-    token=$(get_oauth_token)
-    if [[ -z "$token" ]]; then
-        [[ -f "$cache_file" ]] && cat "$cache_file"
-        return
-    fi
-
-    local response
-    response=$(curl -s --max-time 5 \
-        -H "Accept: application/json" \
-        -H "Content-Type: application/json" \
-        -H "Authorization: Bearer $token" \
-        -H "anthropic-beta: oauth-2025-04-20" \
-        -H "User-Agent: claude-code/2.1.34" \
-        "https://api.anthropic.com/api/oauth/usage" 2>/dev/null)
-
-    if [[ -n "$response" ]] && echo "$response" | jq -e '.five_hour' >/dev/null 2>&1; then
-        echo "$response" > "$cache_file"
-        echo "$response"
-    else
-        [[ -f "$cache_file" ]] && cat "$cache_file"
-    fi
-}
 
 # Color codes for better visual separation
 readonly BLUE='\033[94m'      # Bright blue for model/main info
@@ -467,9 +359,7 @@ fi
 # Output ends with trailing space for visual comfort
 output_string="${output_string} "
 
-# --- Fetch usage and build extra lines ---
-usage_json=$(fetch_usage)
-
+# --- Build extra lines ---
 usage_lines=""
 
 # Line 2: Context bar (always shown if context data available)
@@ -481,31 +371,29 @@ if [[ "$context_window_size" -gt 0 ]] && [[ -n "$usage_percent" ]]; then
     usage_lines+="\n ${BLUE}context${RESET} ${ctx_bar} ${ctx_color}${ctx_pct}%${RESET}  ${DIM}${ctx_suffix}${RESET}"
 fi
 
-# Lines 3-4: Current (5h) and Weekly (7d) usage
-if [[ -n "$usage_json" ]]; then
-    five_pct=$(echo "$usage_json" | jq -r '.five_hour.utilization // empty' 2>/dev/null)
-    five_reset=$(echo "$usage_json" | jq -r '.five_hour.resets_at // empty' 2>/dev/null)
-    seven_pct=$(echo "$usage_json" | jq -r '.seven_day.utilization // empty' 2>/dev/null)
-    seven_reset=$(echo "$usage_json" | jq -r '.seven_day.resets_at // empty' 2>/dev/null)
+# Lines 3-4: Current (5h) and Weekly (7d) usage from Claude Code stdin JSON
+five_pct=$(echo "$input" | jq -r '.rate_limits.five_hour.used_percentage // empty' 2>/dev/null)
+five_reset_epoch=$(echo "$input" | jq -r '.rate_limits.five_hour.resets_at // empty' 2>/dev/null)
+seven_pct=$(echo "$input" | jq -r '.rate_limits.seven_day.used_percentage // empty' 2>/dev/null)
+seven_reset_epoch=$(echo "$input" | jq -r '.rate_limits.seven_day.resets_at // empty' 2>/dev/null)
 
-    # Round percentages to integers
-    five_pct_int=$(awk "BEGIN {printf \"%.0f\", ${five_pct:-0}}")
-    seven_pct_int=$(awk "BEGIN {printf \"%.0f\", ${seven_pct:-0}}")
+# Round percentages to integers
+five_pct_int=$(awk "BEGIN {printf \"%.0f\", ${five_pct:-0}}")
+seven_pct_int=$(awk "BEGIN {printf \"%.0f\", ${seven_pct:-0}}")
 
-    if [[ -n "$five_pct" ]]; then
-        five_bar=$(build_bar "$five_pct_int" 10)
-        five_countdown=$(format_countdown "$five_reset")
-        five_color=$(color_for_pct "$five_pct_int")
-        five_pct_fmt=$(printf "%3d" "$five_pct_int")
-        usage_lines+="\n ${GREEN}current${RESET} ${five_bar} ${five_color}${five_pct_fmt}%${RESET}  ${DIM}resets in ${five_countdown}${RESET}"
-    fi
-    if [[ -n "$seven_pct" ]]; then
-        seven_bar=$(build_bar "$seven_pct_int" 10)
-        seven_countdown=$(format_countdown "$seven_reset")
-        seven_color=$(color_for_pct "$seven_pct_int")
-        seven_pct_fmt=$(printf "%3d" "$seven_pct_int")
-        usage_lines+="\n ${YELLOW}weekly ${RESET} ${seven_bar} ${seven_color}${seven_pct_fmt}%${RESET}  ${DIM}resets in ${seven_countdown}${RESET}"
-    fi
+if [[ -n "$five_pct" ]]; then
+    five_bar=$(build_bar "$five_pct_int" 10)
+    five_countdown=$(format_countdown "$five_reset_epoch")
+    five_color=$(color_for_pct "$five_pct_int")
+    five_pct_fmt=$(printf "%3d" "$five_pct_int")
+    usage_lines+="\n ${GREEN}current${RESET} ${five_bar} ${five_color}${five_pct_fmt}%${RESET}  ${DIM}resets in ${five_countdown}${RESET}"
+fi
+if [[ -n "$seven_pct" ]]; then
+    seven_bar=$(build_bar "$seven_pct_int" 10)
+    seven_countdown=$(format_countdown "$seven_reset_epoch")
+    seven_color=$(color_for_pct "$seven_pct_int")
+    seven_pct_fmt=$(printf "%3d" "$seven_pct_int")
+    usage_lines+="\n ${YELLOW}weekly ${RESET} ${seven_bar} ${seven_color}${seven_pct_fmt}%${RESET}  ${DIM}resets in ${seven_countdown}${RESET}"
 fi
 
 # Output the complete string
