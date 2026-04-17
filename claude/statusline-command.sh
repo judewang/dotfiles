@@ -40,7 +40,7 @@ parse_git_status() {
         echo "untracked=0 modified=0 staged=0 conflicts=0"
         return
     fi
-    
+
     echo "$status_output" | awk '
         BEGIN { untracked=0; modified=0; staged=0; conflicts=0 }
         /^\?\?/ { untracked++ }
@@ -247,7 +247,7 @@ if git -C "$current_dir" rev-parse --git-dir >/dev/null 2>&1; then
                 ahead_behind=" ${YELLOW}↓${behind}${RESET}"
             fi
         fi
-        
+
         # Check for rebase/merge status
         rebase_merge_info=""
         if [[ -d "$current_dir/.git/rebase-merge" ]] || [[ -d "$current_dir/.git/rebase-apply" ]]; then
@@ -301,10 +301,10 @@ if git -C "$current_dir" rev-parse --git-dir >/dev/null 2>&1; then
 
         # Build git info components
         git_branch_section="${git_color}${git_icon} ${branch}${RESET}${rebase_merge_info}${pr_info}"
-        
+
         # Collect additional git info sections that have content
         git_extra_sections=()
-        
+
         # Only add status section if there are changes
         if [[ -n "$status_indicators" ]]; then
             git_extra_sections+=("${status_indicators}")
@@ -317,7 +317,7 @@ if git -C "$current_dir" rev-parse --git-dir >/dev/null 2>&1; then
 
         # Build git info starting with branch
         git_info=" ${GRAY}│${RESET} ${git_branch_section}"
-        
+
         # Add additional sections with separators only if they exist
         for section in "${git_extra_sections[@]}"; do
             git_info="${git_info} ${GRAY}│${RESET} ${section}"
@@ -339,39 +339,31 @@ if [[ "$context_window_size" -gt 0 ]]; then
     fi
 fi
 
-# Build output string with smart separators
-output_string=" ${BOLD}${BLUE}${model_name}${RESET}"
-
-# Add project/directory info combined (with worktree indicator if applicable)
-worktree_marker=""
-if [[ "${is_worktree:-0}" == "1" ]]; then
-    worktree_marker=" ${CYAN}🌳${RESET}"
-fi
-if [[ -n "$project_name" ]]; then
-    output_string="${output_string} ${GRAY}│${RESET} ${CYAN}${project_name}${RESET} ${PURPLE}(${dir_display})${RESET}${worktree_marker}"
+# Row 1: use wt list statusline --format=claude-code (fallback to built-in format)
+# Pipe $input so wt can read model/context from the Claude Code JSON
+wt_output=$(echo "$input" | wt list statusline --format=claude-code 2>/dev/null)
+if [[ -n "$wt_output" ]]; then
+    output_string="${wt_output} "
 else
-    output_string="${output_string} ${GRAY}│${RESET} ${PURPLE}${dir_display}${RESET}${worktree_marker}"
+    # Fallback: built-in format
+    output_string=" ${BOLD}${BLUE}${model_name}${RESET}"
+    worktree_marker=""
+    if [[ "${is_worktree:-0}" == "1" ]]; then
+        worktree_marker=" ${CYAN}🌳${RESET}"
+    fi
+    if [[ -n "$project_name" ]]; then
+        output_string="${output_string} ${GRAY}│${RESET} ${CYAN}${project_name}${RESET} ${PURPLE}(${dir_display})${RESET}${worktree_marker}"
+    else
+        output_string="${output_string} ${GRAY}│${RESET} ${PURPLE}${dir_display}${RESET}${worktree_marker}"
+    fi
+    [[ -n "$git_info" ]] && output_string="${output_string}${git_info}"
+    output_string="${output_string} "
 fi
-
-# Add git info if present
-[[ -n "$git_info" ]] && output_string="${output_string}${git_info}"
-
-# Output ends with trailing space for visual comfort
-output_string="${output_string} "
 
 # --- Build extra lines ---
 usage_lines=""
 
-# Line 2: Context bar (always shown if context data available)
-if [[ "$context_window_size" -gt 0 ]] && [[ -n "$usage_percent" ]]; then
-    ctx_bar=$(build_bar "$usage_percent" 10)
-    ctx_color=$(color_for_pct "$usage_percent")
-    ctx_pct=$(printf "%3d" "$usage_percent")
-    ctx_suffix="${context_tokens_display} used"
-    usage_lines+="\n ${BLUE}context${RESET} ${ctx_bar} ${ctx_color}${ctx_pct}%${RESET}  ${DIM}${ctx_suffix}${RESET}"
-fi
-
-# Lines 3-4: Current (5h) and Weekly (7d) usage from Claude Code stdin JSON
+# Line 2: Current (5h) + Weekly (7d) usage combined on one line
 five_pct=$(echo "$input" | jq -r '.rate_limits.five_hour.used_percentage // empty' 2>/dev/null)
 five_reset_epoch=$(echo "$input" | jq -r '.rate_limits.five_hour.resets_at // empty' 2>/dev/null)
 seven_pct=$(echo "$input" | jq -r '.rate_limits.seven_day.used_percentage // empty' 2>/dev/null)
@@ -381,19 +373,24 @@ seven_reset_epoch=$(echo "$input" | jq -r '.rate_limits.seven_day.resets_at // e
 five_pct_int=$(awk "BEGIN {printf \"%.0f\", ${five_pct:-0}}")
 seven_pct_int=$(awk "BEGIN {printf \"%.0f\", ${seven_pct:-0}}")
 
-if [[ -n "$five_pct" ]]; then
-    five_bar=$(build_bar "$five_pct_int" 10)
-    five_countdown=$(format_countdown "$five_reset_epoch")
-    five_color=$(color_for_pct "$five_pct_int")
-    five_pct_fmt=$(printf "%3d" "$five_pct_int")
-    usage_lines+="\n ${GREEN}current${RESET} ${five_bar} ${five_color}${five_pct_fmt}%${RESET}  ${DIM}resets in ${five_countdown}${RESET}"
-fi
-if [[ -n "$seven_pct" ]]; then
-    seven_bar=$(build_bar "$seven_pct_int" 10)
-    seven_countdown=$(format_countdown "$seven_reset_epoch")
-    seven_color=$(color_for_pct "$seven_pct_int")
-    seven_pct_fmt=$(printf "%3d" "$seven_pct_int")
-    usage_lines+="\n ${YELLOW}weekly ${RESET} ${seven_bar} ${seven_color}${seven_pct_fmt}%${RESET}  ${DIM}resets in ${seven_countdown}${RESET}"
+if [[ -n "$five_pct" ]] || [[ -n "$seven_pct" ]]; then
+    combined_line=" "
+    if [[ -n "$five_pct" ]]; then
+        five_bar=$(build_bar "$five_pct_int" 10)
+        five_countdown=$(format_countdown "$five_reset_epoch")
+        five_color=$(color_for_pct "$five_pct_int")
+        five_pct_fmt=$(printf "%3d" "$five_pct_int")
+        combined_line+="${GREEN}current${RESET} ${five_bar} ${five_color}${five_pct_fmt}%${RESET}  ${DIM}↺ ${five_countdown}${RESET}"
+    fi
+    if [[ -n "$seven_pct" ]]; then
+        seven_bar=$(build_bar "$seven_pct_int" 10)
+        seven_countdown=$(format_countdown "$seven_reset_epoch")
+        seven_color=$(color_for_pct "$seven_pct_int")
+        seven_pct_fmt=$(printf "%3d" "$seven_pct_int")
+        [[ -n "$five_pct" ]] && combined_line+="    "
+        combined_line+="${YELLOW}weekly${RESET}  ${seven_bar} ${seven_color}${seven_pct_fmt}%${RESET}  ${DIM}↺ ${seven_countdown}${RESET}"
+    fi
+    usage_lines+="\n${combined_line}"
 fi
 
 # Output the complete string
