@@ -5,7 +5,14 @@ return {
     priority = 1000,
     lazy = false,
     opts = {
-      style = "storm",
+      style = "night",
+      on_colors = function(c)
+        c.bg        = "#0d1117"
+        c.bg_dark   = "#080c12"
+        c.bg_float  = "#0d1117"
+        c.bg_popup  = "#0d1117"
+        c.bg_sidebar = "#080c12"
+      end,
       on_highlights = function(hl, c)
         -- Glow-inspired overrides: brighter keywords, warmer strings, vivid functions
         hl["@keyword"]          = { fg = "#00AAFF" }
