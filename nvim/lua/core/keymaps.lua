@@ -47,6 +47,10 @@ map({ "n", "i", "v" }, "<F1>", "<cmd>Telescope commands<CR>", { desc = "Command 
 map("n", "<F8>", vim.diagnostic.goto_next, { desc = "Go to next problem" })
 map("n", "<S-F8>", vim.diagnostic.goto_prev, { desc = "Go to previous problem" })
 
+-- Jump list navigation (VS Code-like Alt+Left / Alt+Right)
+map("n", "<C-->", "<C-o>", { desc = "Jump to previous cursor position" })
+map("n", "<C-_>", "<C-i>", { desc = "Jump to next cursor position" })
+
 -- Clear search highlight
 map("n", "<Esc>", "<cmd>nohlsearch<CR>", { desc = "Clear search highlight" })
 
