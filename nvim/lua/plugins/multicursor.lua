@@ -9,12 +9,13 @@ return {
 
       local set = vim.keymap.set
 
-      -- VS Code Cmd+D: select the word under the cursor, repeat to add the next match
-      set({ "n", "x" }, "<C-d>", function() mc.matchAddCursor(1) end,
+      -- Add a cursor on the word under cursor / next match. Repeatable like
+      -- VS Code Cmd+D. <C-d> is intentionally left as the default half-page scroll.
+      set({ "n", "x" }, "<C-n>", function() mc.matchAddCursor(1) end,
         { desc = "Multicursor: add next match" })
 
-      -- VS Code Cmd+Shift+L: add cursors to ALL matches at once
-      set({ "n", "x" }, "<leader>D", function() mc.matchAllAddCursors() end,
+      -- Select ALL matches at once (<leader>A, A = All; VS Code Cmd+Shift+L)
+      set({ "n", "x" }, "<leader>A", function() mc.matchAllAddCursors() end,
         { desc = "Multicursor: select all matches" })
 
       -- Add a cursor on the line below / above (VS Code Cmd+Opt+Down / Up)
