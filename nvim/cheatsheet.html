@@ -1,0 +1,558 @@
+<title>Neovim Keymap Cheat Sheet</title>
+<meta name="description" content="Jude 的自訂 Neovim 快捷鍵速查表 — 依功能分組，含即時過濾。">
+
+<style>
+  :root {
+    /* Palette derived from the user's actual tokyonight-night overrides */
+    --ground:   #080c12;
+    --surface:  #0d1117;
+    --panel:    #11161f;
+    --panel-2:  #161c27;
+    --keycap:   #1a212d;
+    --border:   #20283400;
+    --line:     #1e2531;
+    --line-2:   #283142;
+    --text:     #c6cedb;
+    --text-dim: #79859a;
+    --text-mut: #525d70;
+    --blue:  #00AAFF;  /* @keyword  */
+    --green: #00D787;  /* @function */
+    --tan:   #C69669;  /* @string   */
+    --mint:  #6EEFC0;  /* @number   */
+    --violet:#bb9af7;  /* terminal  */
+    --red:   #f7768e;  /* diagnostic*/
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background:
+      radial-gradient(1200px 600px at 80% -10%, #0f1722 0%, transparent 60%),
+      var(--surface);
+    color: var(--text);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 20px 72px;
+  }
+
+  /* ---- lualine-style status bar (mirrors the user's real lualine sections) ---- */
+  .statusbar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: flex;
+    align-items: stretch;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    background: var(--ground);
+    border-bottom: 1px solid var(--line-2);
+    box-shadow: 0 8px 24px -16px #000;
+    overflow: hidden;
+  }
+  .statusbar .seg { display: flex; align-items: center; padding: 0 14px; white-space: nowrap; }
+  .statusbar .mode {
+    background: var(--blue); color: #051019; font-weight: 700;
+    letter-spacing: .14em; padding: 0 16px;
+  }
+  .statusbar .branch { color: var(--text-dim); gap: 14px; }
+  .statusbar .branch .add { color: var(--green); }
+  .statusbar .branch .chg { color: var(--tan); }
+  .statusbar .file { color: var(--text); flex: 1; min-width: 0; }
+  .statusbar .file b { color: var(--text); font-weight: 600; }
+  .statusbar .file .dir { color: var(--text-mut); }
+  .statusbar .meta { color: var(--text-dim); gap: 16px; }
+  .statusbar .loc { background: var(--green); color: #04140d; font-weight: 700; padding: 0 14px; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 7px; }
+
+  @media (max-width: 720px) {
+    .statusbar .branch, .statusbar .meta { display: none; }
+  }
+
+  /* ---- masthead ---- */
+  header.head { padding: 40px 0 8px; }
+  .eyebrow {
+    font-family: var(--mono); font-size: 12px; letter-spacing: .26em;
+    text-transform: uppercase; color: var(--text-mut); margin: 0 0 14px;
+  }
+  h1 {
+    font-size: clamp(30px, 5vw, 46px);
+    line-height: 1.05; margin: 0; font-weight: 700; letter-spacing: -0.02em;
+    text-wrap: balance; color: #e9eef6;
+  }
+  h1 .accent { color: var(--green); }
+  .lede {
+    margin: 16px 0 0; max-width: 62ch; color: var(--text-dim); font-size: 15px;
+  }
+
+  /* ---- controls row ---- */
+  .controls {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px;
+    margin: 28px 0 10px;
+  }
+  .search {
+    position: relative; flex: 1 1 320px; min-width: 240px;
+  }
+  .search input {
+    width: 100%; font-family: var(--mono); font-size: 14px;
+    color: var(--text); background: var(--panel); border: 1px solid var(--line-2);
+    border-radius: 9px; padding: 11px 14px 11px 38px; outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .search input::placeholder { color: var(--text-mut); }
+  .search input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,170,255,.16); }
+  .search .glass {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    color: var(--text-mut); font-size: 15px; pointer-events: none;
+  }
+  .count { font-family: var(--mono); font-size: 12.5px; color: var(--text-mut); white-space: nowrap; }
+
+  /* ---- legend ---- */
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 10px; margin: 6px 0 30px; align-items: center; }
+  .legend .lbl { font-family: var(--mono); font-size: 11.5px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--text-mut); margin-right: 4px; }
+  .leader-note {
+    font-family: var(--mono); font-size: 12.5px; color: var(--text-dim);
+    background: var(--panel); border: 1px solid var(--line-2); border-radius: 7px;
+    padding: 5px 11px;
+  }
+  .leader-note b { color: var(--blue); }
+
+  .mode {
+    font-family: var(--mono); font-size: 11px; font-weight: 700;
+    padding: 3px 7px; border-radius: 5px; letter-spacing: .03em;
+    border: 1px solid transparent;
+  }
+  .m-n { color: var(--blue);  background: rgba(0,170,255,.11);  border-color: rgba(0,170,255,.28); }
+  .m-i { color: var(--green); background: rgba(0,215,135,.11);  border-color: rgba(0,215,135,.28); }
+  .m-v { color: var(--mint);  background: rgba(110,239,192,.10); border-color: rgba(110,239,192,.26); }
+  .m-o { color: var(--tan);   background: rgba(198,150,105,.12); border-color: rgba(198,150,105,.30); }
+  .m-t { color: var(--violet);background: rgba(187,154,247,.11); border-color: rgba(187,154,247,.28); }
+
+  /* ---- card grid (masonry via CSS columns) ---- */
+  .grid { columns: 3 320px; column-gap: 18px; }
+  .card {
+    break-inside: avoid;
+    background: linear-gradient(180deg, var(--panel) 0%, var(--surface) 100%);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px 16px 8px;
+    margin: 0 0 18px;
+  }
+  .card.hidden, .row.hidden { display: none; }
+
+  .card-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 10px; padding-bottom: 10px; margin-bottom: 6px;
+    border-bottom: 1px solid var(--line);
+  }
+  .card-head h2 {
+    margin: 0; font-size: 14.5px; font-weight: 650; letter-spacing: .01em; color: #e3e9f2;
+    display: flex; align-items: center; gap: 9px;
+  }
+  .card-head .ic { width: 9px; height: 9px; border-radius: 2.5px; flex: none; }
+  .prefix {
+    font-family: var(--mono); font-size: 11px; color: var(--text-mut);
+    border: 1px solid var(--line-2); border-radius: 6px; padding: 2px 7px; white-space: nowrap;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center; gap: 10px;
+    padding: 7px 4px; border-bottom: 1px solid #161c2666;
+  }
+  .row:last-child { border-bottom: 0; }
+  .row:hover { background: var(--panel-2); border-radius: 6px; }
+  .desc { font-size: 13.5px; color: var(--text); }
+  .desc .sub { color: var(--text-mut); font-size: 12px; }
+  .keys { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+
+  kbd {
+    font-family: var(--mono); font-size: 12px; line-height: 1;
+    color: #d7dde7; background: var(--keycap);
+    border: 1px solid var(--line-2); border-bottom-width: 2px;
+    border-radius: 5px; padding: 4px 6px; white-space: nowrap;
+  }
+  kbd.lead { color: var(--blue); background: rgba(0,170,255,.10); border-color: rgba(0,170,255,.30); }
+  kbd.mod  { color: var(--tan); }
+  .sep { color: var(--text-mut); font-size: 11px; padding: 0 1px; }
+  .ph { font-family: var(--mono); font-size: 11.5px; color: var(--text-mut); font-style: italic; }
+  .rowmode { margin-left: 2px; }
+
+  /* ---- footnotes ---- */
+  .notes {
+    margin-top: 28px; border-top: 1px solid var(--line);
+    padding-top: 22px; display: grid; gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+  .note {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px;
+  }
+  .note h3 {
+    margin: 0 0 7px; font-size: 12px; letter-spacing: .16em; text-transform: uppercase;
+    font-family: var(--mono); color: var(--text-dim);
+  }
+  .note.warn h3 { color: var(--tan); }
+  .note p { margin: 0; font-size: 13px; color: var(--text-dim); }
+  .note code, .desc code, .lede code {
+    font-family: var(--mono); font-size: 12px; color: var(--mint);
+    background: #0b1019; border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px;
+  }
+  .foot {
+    margin-top: 26px; text-align: center; font-family: var(--mono);
+    font-size: 11.5px; color: var(--text-mut); letter-spacing: .04em;
+  }
+
+  @media (max-width: 520px) {
+    .grid { columns: 1; }
+  }
+</style>
+
+<div class="statusbar">
+  <div class="seg mode">NORMAL</div>
+  <div class="seg branch">
+    <span> main</span>
+    <span class="add">+24</span><span class="chg">~6</span>
+    <span><span class="dot" style="background:var(--blue)"></span>16 groups</span>
+  </div>
+  <div class="seg file"><span class="dir">~/.config/nvim/</span><b>keymap-cheatsheet.md</b></div>
+  <div class="seg meta"><span>utf-8</span><span>unix</span><span>markdown</span></div>
+  <div class="seg loc">ALL</div>
+</div>
+
+<div class="wrap">
+  <header class="head">
+    <p class="eyebrow">tokyonight · night — your config, your keys</p>
+    <h1>Neovim <span class="accent">Keymap</span> Cheat Sheet</h1>
+    <p class="lede">從 <code>~/.config/nvim/</code> 直接擷取的全部快捷鍵，依功能分組。配色取自你自己的 syntax theme。Leader 是 <code>Space</code>，忘記哪個鍵時，直接打字過濾。</p>
+
+    <div class="controls">
+      <div class="search">
+        <span class="glass">⌕</span>
+        <input id="filter" type="text" autocomplete="off" spellcheck="false"
+          placeholder="輸入關鍵字過濾… 例如 git、buffer、format、Space f" aria-label="Filter keybindings">
+      </div>
+      <span class="count" id="count"></span>
+    </div>
+
+    <div class="legend">
+      <span class="lbl">Modes</span>
+      <span class="mode m-n">N</span><span class="desc" style="font-size:12px;color:var(--text-mut)">normal</span>
+      <span class="mode m-i">I</span><span class="desc" style="font-size:12px;color:var(--text-mut)">insert</span>
+      <span class="mode m-v">V</span><span class="desc" style="font-size:12px;color:var(--text-mut)">visual</span>
+      <span class="mode m-o">O</span><span class="desc" style="font-size:12px;color:var(--text-mut)">operator</span>
+      <span class="mode m-t">T</span><span class="desc" style="font-size:12px;color:var(--text-mut)">terminal</span>
+      <span class="leader-note" style="margin-left:auto"><b>Leader</b> = Space &nbsp;·&nbsp; <b>localleader</b> = \</span>
+    </div>
+  </header>
+
+  <main class="grid" id="grid">
+
+    <!-- ESSENTIALS -->
+    <section class="card">
+      <div class="card-head">
+        <h2><span class="ic" style="background:var(--blue)"></span>核心 Essentials</h2>
+        <span class="prefix">core/keymaps</span>
+      </div>
+      <div class="row"><span class="desc">存檔 Save file</span><span class="keys"><kbd class="mod">Ctrl</kbd><span class="sep">+</span><kbd>S</kbd><span class="mode m-i rowmode">N I V</span></span></div>
+      <div class="row"><span class="desc">離開 insert mode</span><span class="keys"><kbd>j</kbd><kbd>k</kbd><span class="mode m-i rowmode">I</span></span></div>
+      <div class="row"><span class="desc">清除搜尋 highlight</span><span class="keys"><kbd>Esc</kbd></span></div>
+      <div class="row"><span class="desc">全部離開 Quit all</span><span class="keys"><kbd class="lead">Space</kbd><kbd>q</kbd><kbd>q</kbd></span></div>
+      <div class="row"><span class="desc">Command palette<span class="sub"> · Telescope commands</span></span><span class="keys"><kbd>F1</kbd></span></div>
+      <div class="row"><span class="desc">Command palette</span><span class="keys"><kbd class="mod">Ctrl</kbd><span class="sep">+</span><kbd>⇧</kbd><span class="sep">+</span><kbd>P</kbd></span></div>
+    </section>
+
+    <!-- FIND / SEARCH -->
+    <section class="card">
+      <div class="card-head">
+        <h2><span class="ic" style="background:var(--green)"></span>尋找 Find &amp; Search</h2>
+        <span class="prefix">Space f / s</span>
+      </div>
+      <div class="row"><span class="desc">找檔案 Find files</span><span class="keys"><kbd class="mod">Ctrl</kbd><span class="sep">+</span><kbd>P</kbd></span></div>
+      <div class="row"><span class="desc">全域搜尋 Live grep</span><span class="keys"><kbd class="mod">Ctrl</kbd><span class="sep">+</span><kbd>⇧</kbd><span class="sep">+</span><kbd>F</kbd></span></div>
+      <div class="row"><span class="desc">找檔案 Find files</span><span class="keys"><kbd class="lead">Space</kbd><kbd>f</kbd><kbd>f</kbd></span></div>
+      <div class="row"><span class="desc">全域搜尋 Live grep</span><span class="keys"><kbd class="lead">Space</kbd><kbd>f</kbd><kbd>g</kbd></span></div>
+      <div class="row"><span class="desc">開啟的 Buffers</span><span class="keys"><kbd class="lead">Space</kbd><kbd>f</kbd><kbd>b</kbd></span></div>
+      <div class="row"><span class="desc">最近檔案 Recent</span><span class="keys"><kbd class="lead">Space</kbd><kbd>f</kbd><kbd>r</kbd></span></div>
+      <div class="row"><span class="desc">Help tags</span><span class="keys"><kbd class="lead">Space</kbd><kbd>f</kbd><kbd>h</kbd></span></div>
+      <div class="row"><span class="desc">Commands</span><span class="keys"><kbd class="lead">Space</kbd><kbd>f</kbd><kbd>c</kbd></span></div>
+      <div class="row"><span class="desc">搜尋游標下的字 word</span><span class="keys"><kbd class="lead">Space</kbd><kbd>s</kbd><kbd>w</kbd></span></div>
+      <div class="row"><span class="desc">Diagnostics 清單</span><span class="keys"><kbd class="lead">Space</kbd><kbd>s</kbd><kbd>d</kbd></span></div>
+      <div class="row"><span class="desc">Keymaps 列表</span><span class="keys"><kbd class="lead">Space</kbd><kbd>s</kbd><kbd>k</kbd></span></div>
+      <div class="row"><span class="desc">本檔 Keymaps</span><span class="keys"><kbd class="lead">Space</kbd><kbd>?</kbd></span></div>
+      <div class="row"><span class="desc">Document symbols</span><span class="keys"><kbd class="lead">Space</kbd><kbd>s</kbd><kbd>s</kbd></span></div>
+      <div class="row"><span class="desc">Workspace symbols</span><span class="keys"><kbd class="lead">Space</kbd><kbd>s</kbd><kbd>⇧S</kbd></span></div>
+    </section>
+
+    <!-- MOTION / FLASH -->
+    <section class="card">
+      <div class="card-head">
+        <h2><span class="ic" style="background:var(--mint)"></span>跳躍 Motion · Flash</h2>
+        <span class="prefix">flash.nvim</span>
+      </div>
+      <div class="row"><span class="desc">Flash 跳到任意位置</span><span class="keys"><kbd>s</kbd><span class="mode m-n rowmode">N V O</span></span></div>
+      <div class="row"><span class="desc">Flash Treesitter 節點</span><span class="keys"><kbd>S</kbd><span class="mode m-n rowmode">N O</span></span></div>
+      <div class="row"><span class="desc">Remote Flash</span><span class="keys"><kbd>r</kbd><span class="mode m-o rowmode">O</span></span></div>
+      <div class="row"><span class="desc">Treesitter Search</span><span class="keys"><kbd>R</kbd><span class="mode m-o rowmode">O V</span></span></div>
+      <div class="row"><span class="desc">跳回上一個游標位置<span class="sub"> · jumplist</span></span><span class="keys"><kbd class="mod">Ctrl</kbd><span class="sep">+</span><kbd>-</kbd></span></div>
+      <div class="row"><span class="desc">跳到下一個游標位置</span><span class="keys"><kbd class="mod">Ctrl</kbd><span class="sep">+</span><kbd>_</kbd></span></div>
+    </section>
+
+    <!-- WINDOWS -->
+    <section class="card">
+      <div class="card-head">
+        <h2><span class="ic" style="background:var(--blue)"></span>視窗 Windows</h2>
+        <span class="prefix">core/keymaps</span>
+      </div>
+      <div class="row"><span class="desc">移到左 / 下 / 上 / 右視窗</span><span class="keys"><kbd class="mod">Ctrl</kbd><span class="sep">+</span><kbd>h</kbd><kbd>j</kbd><kbd>k</kbd><kbd>l</kbd></span></div>
+      <div class="row"><span class="desc">調整視窗高度 ＋ / －</span><span class="keys"><kbd class="mod">Ctrl</kbd><span class="sep">+</span><kbd>↑</kbd><kbd>↓</kbd></span></div>
+      <div class="row"><span class="desc">調整視窗寬度 － / ＋</span><span class="keys"><kbd class="mod">Ctrl</kbd><span class="sep">+</span><kbd>←</kbd><kbd>→</kbd></span></div>
+    </section>
+
+    <!-- BUFFERS -->
+    <section class="card">
+      <div class="card-head">
+        <h2><span class="ic" style="background:var(--green)"></span>Buffers &amp; Tabs</h2>
+        <span class="prefix">Space b</span>
+      </div>
+      <div class="row"><span class="desc">上一個 / 下一個 buffer</span><span class="keys"><kbd>⇧</kbd><kbd>H</kbd><span class="sep">/</span><kbd>⇧</kbd><kbd>L</kbd></span></div>
+      <div class="row"><span class="desc">跳到 buffer 1–5</span><span class="keys"><kbd class="lead">Space</kbd><kbd>1</kbd><span class="sep">…</span><kbd>5</kbd></span></div>
+      <div class="row"><span class="desc">關閉 buffer</span><span class="keys"><kbd class="lead">Space</kbd><kbd>b</kbd><kbd>d</kbd></span></div>
+      <div class="row"><span class="desc">強制關閉 buffer</span><span class="keys"><kbd class="lead">Space</kbd><kbd>b</kbd><kbd>⇧D</kbd></span></div>
+      <div class="row"><span class="desc">釘選 / 取消 pin</span><span class="keys"><kbd class="lead">Space</kbd><kbd>b</kbd><kbd>p</kbd></span></div>
+      <div class="row"><span class="desc">關閉未釘選的 buffers</span><span class="keys"><kbd class="lead">Space</kbd><kbd>b</kbd><kbd>⇧P</kbd></span></div>
+    </section>
+
+    <!-- EXPLORER / OUTLINE -->
+    <section class="card">
+      <div class="card-head">
+        <h2><span class="ic" style="background:var(--tan)"></span>檔案樹 Explorer · Outline</h2>
+        <span class="prefix">neo-tree / outline</span>
+      </div>
+      <div class="row"><span class="desc">開關檔案樹 file explorer</span><span class="keys"><kbd class="mod">Ctrl</kbd><span class="sep">+</span><kbd>B</kbd></span></div>
+      <div class="row"><span class="desc">開關檔案樹</span><span class="keys"><kbd class="lead">Space</kbd><kbd>e</kbd></span></div>
+      <div class="row"><span class="desc">在檔案樹中定位當前檔</span><span class="keys"><kbd class="lead">Space</kbd><kbd>f</kbd><kbd>e</kbd></span></div>
+      <div class="row"><span class="desc">開關 symbol outline</span><span class="keys"><kbd class="lead">Space</kbd><kbd>o</kbd></span></div>
+    </section>
+
+    <!-- LSP / CODE -->
+    <section class="card">
+      <div class="card-head">
+        <h2><span class="ic" style="background:var(--blue)"></span>LSP &amp; Code</h2>
+        <span class="prefix">Space c · g</span>
+      </div>
+      <div class="row"><span class="desc">跳到定義 definition</span><span class="keys"><kbd>g</kbd><kbd>d</kbd><span class="sep">/</span><kbd>F12</kbd></span></div>
+      <div class="row"><span class="desc">跳到宣告 declaration</span><span class="keys"><kbd>g</kbd><kbd>D</kbd></span></div>
+      <div class="row"><span class="desc">找引用 references</span><span class="keys"><kbd>g</kbd><kbd>r</kbd></span></div>
+      <div class="row"><span class="desc">找實作 implementation</span><span class="keys"><kbd>g</kbd><kbd>i</kbd></span></div>
+      <div class="row"><span class="desc">Hover 文件</span><span class="keys"><kbd>K</kbd></span></div>
+      <div class="row"><span class="desc">重新命名 rename</span><span class="keys"><kbd>F2</kbd><span class="sep">/</span><kbd class="lead">Space</kbd><kbd>c</kbd><kbd>r</kbd></span></div>
+      <div class="row"><span class="desc">Code action</span><span class="keys"><kbd class="lead">Space</kbd><kbd>c</kbd><kbd>a</kbd><span class="mode m-v rowmode">N V</span></span></div>
+      <div class="row"><span class="desc">格式化 format buffer</span><span class="keys"><kbd class="lead">Space</kbd><kbd>c</kbd><kbd>f</kbd><span class="mode m-v rowmode">N V</span></span></div>
+      <div class="row"><span class="desc">本行 diagnostics 浮窗</span><span class="keys"><kbd class="lead">Space</kbd><kbd>c</kbd><kbd>d</kbd></span></div>
+    </section>
+
+    <!-- DIAGNOSTICS -->
+    <section class="card">
+      <div class="card-head">
+        <h2><span class="ic" style="background:var(--red)"></span>Diagnostics</h2>
+        <span class="prefix">core/keymaps</span>
+      </div>
+      <div class="row"><span class="desc">下一個 / 上一個 問題</span><span class="keys"><kbd>F8</kbd><span class="sep">/</span><kbd>⇧</kbd><kbd>F8</kbd></span></div>
+      <div class="row"><span class="desc">上一個 / 下一個 diagnostic</span><span class="keys"><kbd>[</kbd><kbd>d</kbd><span class="sep">/</span><kbd>]</kbd><kbd>d</kbd></span></div>
+      <div class="row"><span class="desc">本行 diagnostics</span><span class="keys"><kbd class="lead">Space</kbd><kbd>c</kbd><kbd>d</kbd></span></div>
+    </section>
+
+    <!-- EDITING -->
+    <section class="card">
+      <div class="card-head">
+        <h2><span class="ic" style="background:var(--green)"></span>編輯 Editing</h2>
+        <span class="prefix">keymaps / editor</span>
+      </div>
+      <div class="row"><span class="desc">整行上 / 下移</span><span class="keys"><kbd class="mod">Alt</kbd><span class="sep">+</span><kbd>j</kbd><kbd>k</kbd><span class="mode m-n rowmode">N I V</span></span></div>
+      <div class="row"><span class="desc">縮排 左 / 右（保持選取）</span><span class="keys"><kbd>&lt;</kbd><span class="sep">/</span><kbd>&gt;</kbd><span class="mode m-v rowmode">V</span></span></div>
+      <div class="row"><span class="desc">切換註解 toggle comment</span><span class="keys"><kbd class="mod">Ctrl</kbd><span class="sep">+</span><kbd>/</kbd><span class="mode m-v rowmode">N V</span></span></div>
+      <div class="row"><span class="desc">展開選取 expand selection</span><span class="keys"><kbd class="mod">Ctrl</kbd><span class="sep">+</span><kbd>j</kbd></span></div>
+      <div class="row"><span class="desc">縮小選取 shrink</span><span class="keys"><kbd class="mod">Ctrl</kbd><span class="sep">+</span><kbd>k</kbd><span class="mode m-v rowmode">V</span></span></div>
+    </section>
+
+    <!-- MULTI-CURSOR -->
+    <section class="card">
+      <div class="card-head">
+        <h2><span class="ic" style="background:var(--blue)"></span>多游標 Multi-cursor</h2>
+        <span class="prefix">multicursor.nvim</span>
+      </div>
+      <div class="row"><span class="desc">選游標下的詞 → 連按選下一個<span class="sub"> · 像 VS Code Cmd+D</span></span><span class="keys"><kbd class="mod">Ctrl</kbd><span class="sep">+</span><kbd>N</kbd><span class="mode m-v rowmode">N V</span></span></div>
+      <div class="row"><span class="desc">一次選全部相同<span class="sub"> · Cmd+Shift+L</span></span><span class="keys"><kbd class="lead">Space</kbd><kbd>⇧A</kbd><span class="mode m-v rowmode">N V</span></span></div>
+      <div class="row"><span class="desc">上 / 下行加游標<span class="sub"> · Cmd+Opt+↑↓</span></span><span class="keys"><kbd class="mod">Alt</kbd><span class="sep">+</span><kbd>↓</kbd><kbd>↑</kbd><span class="mode m-v rowmode">N V</span></span></div>
+      <div class="row"><span class="desc">跳過當前、選下一個<span class="sub"> · 多游標時</span></span><span class="keys"><kbd class="mod">Ctrl</kbd><span class="sep">+</span><kbd>X</kbd></span></div>
+      <div class="row"><span class="desc">切換主游標<span class="sub"> · 多游標時</span></span><span class="keys"><kbd>←</kbd><span class="sep">/</span><kbd>→</kbd></span></div>
+      <div class="row"><span class="desc">清除所有游標<span class="sub"> · 多游標時</span></span><span class="keys"><kbd>Esc</kbd></span></div>
+    </section>
+
+    <!-- SURROUND -->
+    <section class="card">
+      <div class="card-head">
+        <h2><span class="ic" style="background:var(--tan)"></span>環繞 Surround</h2>
+        <span class="prefix">nvim-surround</span>
+      </div>
+      <div class="row"><span class="desc">加環繞 add</span><span class="keys"><kbd>y</kbd><kbd>s</kbd><span class="ph">motion</span><span class="ph">char</span></span></div>
+      <div class="row"><span class="desc">刪環繞 delete</span><span class="keys"><kbd>d</kbd><kbd>s</kbd><span class="ph">char</span></span></div>
+      <div class="row"><span class="desc">改環繞 change</span><span class="keys"><kbd>c</kbd><kbd>s</kbd><span class="ph">old</span><span class="ph">new</span></span></div>
+      <div class="row"><span class="desc">包住選取 wrap selection</span><span class="keys"><kbd>S</kbd><span class="ph">char</span><span class="mode m-v rowmode">V</span></span></div>
+    </section>
+
+    <!-- TEXT CASE -->
+    <section class="card">
+      <div class="card-head">
+        <h2><span class="ic" style="background:var(--mint)"></span>命名轉換 Text Case</h2>
+        <span class="prefix">ga · Space c c</span>
+      </div>
+      <div class="row"><span class="desc">轉換選單 picker</span><span class="keys"><kbd class="lead">Space</kbd><kbd>c</kbd><kbd>c</kbd><span class="mode m-v rowmode">N V</span></span></div>
+      <div class="row"><span class="desc"><code>snake_case</code></span><span class="keys"><kbd>g</kbd><kbd>a</kbd><kbd>s</kbd></span></div>
+      <div class="row"><span class="desc"><code>camelCase</code></span><span class="keys"><kbd>g</kbd><kbd>a</kbd><kbd>c</kbd></span></div>
+      <div class="row"><span class="desc"><code>PascalCase</code></span><span class="keys"><kbd>g</kbd><kbd>a</kbd><kbd>p</kbd></span></div>
+      <div class="row"><span class="desc"><code>kebab-case</code></span><span class="keys"><kbd>g</kbd><kbd>a</kbd><kbd>k</kbd></span></div>
+      <div class="row"><span class="desc"><code>CONSTANT_CASE</code></span><span class="keys"><kbd>g</kbd><kbd>a</kbd><kbd>⇧U</kbd></span></div>
+      <div class="row"><span class="desc"><code>UPPER CASE</code></span><span class="keys"><kbd>g</kbd><kbd>a</kbd><kbd>u</kbd></span></div>
+      <div class="row"><span class="desc"><code>lower case</code></span><span class="keys"><kbd>g</kbd><kbd>a</kbd><kbd>l</kbd></span></div>
+      <div class="row"><span class="desc"><code>Title Case</code></span><span class="keys"><kbd>g</kbd><kbd>a</kbd><kbd>t</kbd></span></div>
+      <div class="row"><span class="desc"><code>dot.case</code></span><span class="keys"><kbd>g</kbd><kbd>a</kbd><kbd>.</kbd></span></div>
+    </section>
+
+    <!-- GIT -->
+    <section class="card">
+      <div class="card-head">
+        <h2><span class="ic" style="background:var(--tan)"></span>Git</h2>
+        <span class="prefix">Space g · gh</span>
+      </div>
+      <div class="row"><span class="desc">LazyGit</span><span class="keys"><kbd class="lead">Space</kbd><kbd>g</kbd><kbd>g</kbd></span></div>
+      <div class="row"><span class="desc">下一個 / 上一個 hunk</span><span class="keys"><kbd>]</kbd><kbd>h</kbd><span class="sep">/</span><kbd>[</kbd><kbd>h</kbd></span></div>
+      <div class="row"><span class="desc">Stage hunk</span><span class="keys"><kbd class="lead">Space</kbd><kbd>g</kbd><kbd>h</kbd><kbd>s</kbd></span></div>
+      <div class="row"><span class="desc">Reset hunk</span><span class="keys"><kbd class="lead">Space</kbd><kbd>g</kbd><kbd>h</kbd><kbd>r</kbd></span></div>
+      <div class="row"><span class="desc">Preview hunk</span><span class="keys"><kbd class="lead">Space</kbd><kbd>g</kbd><kbd>h</kbd><kbd>p</kbd></span></div>
+      <div class="row"><span class="desc">Blame 整個檔案</span><span class="keys"><kbd class="lead">Space</kbd><kbd>g</kbd><kbd>b</kbd></span></div>
+      <div class="row"><span class="desc">Stage 整個檔案</span><span class="keys"><kbd class="lead">Space</kbd><kbd>g</kbd><kbd>s</kbd></span></div>
+      <div class="row"><span class="desc">Diff 整個檔案</span><span class="keys"><kbd class="lead">Space</kbd><kbd>g</kbd><kbd>d</kbd></span></div>
+      <div class="row"><span class="desc">Reset 整個檔案</span><span class="keys"><kbd class="lead">Space</kbd><kbd>g</kbd><kbd>⇧R</kbd></span></div>
+    </section>
+
+    <!-- AI: Claude + completion -->
+    <section class="card">
+      <div class="card-head">
+        <h2><span class="ic" style="background:var(--violet)"></span>AI · Claude &amp; 補全</h2>
+        <span class="prefix">Space a · neocodeium</span>
+      </div>
+      <div class="row"><span class="desc">開關 Claude Code</span><span class="keys"><kbd class="lead">Space</kbd><kbd>a</kbd><kbd>i</kbd></span></div>
+      <div class="row"><span class="desc">送出選取給 Claude</span><span class="keys"><kbd class="lead">Space</kbd><kbd>a</kbd><kbd>s</kbd><span class="mode m-v rowmode">V</span></span></div>
+      <div class="row"><span class="desc">接受 / 拒絕 diff</span><span class="keys"><kbd class="lead">Space</kbd><kbd>a</kbd><kbd>a</kbd><span class="sep">/</span><kbd>d</kbd></span></div>
+      <div class="row"><span class="desc">接受 AI 整段建議</span><span class="keys"><kbd>Tab</kbd><span class="mode m-i rowmode">I</span></span></div>
+      <div class="row"><span class="desc">接受 AI 一個字 word</span><span class="keys"><kbd class="mod">Ctrl</kbd><span class="sep">+</span><kbd>l</kbd><span class="mode m-i rowmode">I</span></span></div>
+      <div class="row"><span class="desc">接受 AI 一行 line</span><span class="keys"><kbd class="mod">Ctrl</kbd><span class="sep">+</span><kbd>k</kbd><span class="mode m-i rowmode">I</span></span></div>
+      <div class="row"><span class="desc">下一個 / 上一個 AI 建議</span><span class="keys"><kbd class="mod">Alt</kbd><span class="sep">+</span><kbd>]</kbd><span class="sep">/</span><kbd>[</kbd><span class="mode m-i rowmode">I</span></span></div>
+      <div class="row"><span class="desc">關掉 AI 建議 dismiss</span><span class="keys"><kbd class="mod">Ctrl</kbd><span class="sep">+</span><kbd>]</kbd><span class="mode m-i rowmode">I</span></span></div>
+    </section>
+
+    <!-- CMP -->
+    <section class="card">
+      <div class="card-head">
+        <h2><span class="ic" style="background:var(--green)"></span>補全選單 Completion</h2>
+        <span class="prefix">nvim-cmp · I</span>
+      </div>
+      <div class="row"><span class="desc">下一項 / 上一項</span><span class="keys"><kbd>Tab</kbd><span class="sep">/</span><kbd>⇧</kbd><kbd>Tab</kbd></span></div>
+      <div class="row"><span class="desc">確認選擇 confirm</span><span class="keys"><kbd>Enter</kbd></span></div>
+      <div class="row"><span class="desc">手動觸發補全</span><span class="keys"><kbd class="mod">Ctrl</kbd><span class="sep">+</span><kbd>y</kbd></span></div>
+      <div class="row"><span class="desc">中止 abort</span><span class="keys"><kbd class="mod">Ctrl</kbd><span class="sep">+</span><kbd>e</kbd></span></div>
+      <div class="row"><span class="desc">文件捲動 上 / 下</span><span class="keys"><kbd class="mod">Ctrl</kbd><span class="sep">+</span><kbd>b</kbd><span class="sep">/</span><kbd>f</kbd></span></div>
+    </section>
+
+    <!-- TERMINAL -->
+    <section class="card">
+      <div class="card-head">
+        <h2><span class="ic" style="background:var(--violet)"></span>終端機 Terminal</h2>
+        <span class="prefix">Space t · toggleterm</span>
+      </div>
+      <div class="row"><span class="desc">開關終端機</span><span class="keys"><kbd class="mod">Ctrl</kbd><span class="sep">+</span><kbd>`</kbd><span class="mode m-t rowmode">N T</span></span></div>
+      <div class="row"><span class="desc">浮動終端機 float</span><span class="keys"><kbd class="lead">Space</kbd><kbd>t</kbd><kbd>f</kbd></span></div>
+      <div class="row"><span class="desc">水平終端機 horizontal</span><span class="keys"><kbd class="lead">Space</kbd><kbd>t</kbd><kbd>h</kbd></span></div>
+      <div class="row"><span class="desc">垂直終端機 vertical</span><span class="keys"><kbd class="lead">Space</kbd><kbd>t</kbd><kbd>v</kbd></span></div>
+      <div class="row"><span class="desc">離開 terminal mode</span><span class="keys"><kbd>Esc</kbd><kbd>Esc</kbd><span class="mode m-t rowmode">T</span></span></div>
+    </section>
+
+  </main>
+
+  <div class="notes">
+    <div class="note warn">
+      <h3>⚠ 鍵位重疊提醒</h3>
+      <p><code>Ctrl+j</code> / <code>Ctrl+k</code> 同時被「視窗上下移動」與「展開／縮小選取」(wildfire) 綁定，依模式與載入順序決定誰生效；<code>Ctrl+k</code> / <code>Ctrl+l</code> 在 insert mode 則是 AI 接受行／字。實際行為以當下模式為準。multi-cursor 用 <code>Ctrl+N</code>（normal/visual 無內建衝突），<code>Ctrl+D</code>／<code>Ctrl+U</code> 半頁捲動完整保留。</p>
+    </div>
+    <div class="note">
+      <h3>which-key 群組</h3>
+      <p>停在 <code>Space</code> 不放會跳出提示：<code>a</code> AI · <code>b</code> Buffer · <code>c</code> Code · <code>f</code> File/Find · <code>g</code> Git（<code>gh</code> Hunks）· <code>q</code> Quit · <code>s</code> Search · <code>t</code> Terminal。</p>
+    </div>
+    <div class="note">
+      <h3>來源</h3>
+      <p>全部擷取自 <code>~/.config/nvim/</code>（lazy.nvim）。改了 config 後重開 Neovim 或 <code>:Lazy sync</code>，再回來更新這張表即可。</p>
+    </div>
+  </div>
+
+  <p class="foot">~/.config/nvim · tokyonight-night · leader = &lt;Space&gt;</p>
+</div>
+
+<script>
+  (function () {
+    var input = document.getElementById('filter');
+    var count = document.getElementById('count');
+    var cards = Array.prototype.slice.call(document.querySelectorAll('.card'));
+    var rows = Array.prototype.slice.call(document.querySelectorAll('.row'));
+
+    // Pre-compute a searchable string for each row (keys + description text).
+    rows.forEach(function (row) {
+      var keyText = Array.prototype.map.call(row.querySelectorAll('kbd, .ph'),
+        function (k) { return k.textContent; }).join(' ');
+      var desc = (row.querySelector('.desc') || {}).textContent || '';
+      // Normalise: treat the Space leader keycap as the word "leader/space".
+      row.dataset.search = (keyText + ' ' + desc + ' leader').toLowerCase()
+        .replace(/⌃|ctrl/g, 'ctrl').replace(/⇧/g, 'shift').replace(/⌥|alt/g, 'alt');
+    });
+
+    var total = rows.length;
+
+    function apply(q) {
+      q = q.trim().toLowerCase();
+      var visibleRows = 0;
+      rows.forEach(function (row) {
+        var hit = q === '' || row.dataset.search.indexOf(q) !== -1;
+        row.classList.toggle('hidden', !hit);
+        if (hit) visibleRows++;
+      });
+      cards.forEach(function (card) {
+        var anyVisible = card.querySelectorAll('.row:not(.hidden)').length > 0;
+        card.classList.toggle('hidden', !anyVisible);
+      });
+      count.textContent = q === ''
+        ? total + ' 個快捷鍵'
+        : visibleRows + ' / ' + total + ' 符合';
+    }
+
+    input.addEventListener('input', function () { apply(input.value); });
+    // Slash to focus the filter, Esc to clear — muscle-memory friendly.
+    document.addEventListener('keydown', function (e) {
+      if (e.key === '/' && document.activeElement !== input) {
+        e.preventDefault(); input.focus();
+      } else if (e.key === 'Escape' && document.activeElement === input) {
+        input.value = ''; apply(''); input.blur();
+      }
+    });
+    apply('');
+  })();
+</script>
