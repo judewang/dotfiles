@@ -60,17 +60,10 @@ link_item() {
 }
 
 # --- Create symlinks ---
-
-# Claude statusline & commands
-mkdir -p ~/.claude
-link_item "${DOTFILES_DIR}/claude/statusline-command.sh" \
-          ~/.claude/statusline-command.sh \
-          "Claude statusline"
-
-mkdir -p ~/.claude/commands
-link_item "${DOTFILES_DIR}/claude/commands/nvim.md" \
-          ~/.claude/commands/nvim.md \
-          "Claude /nvim command"
+#
+# NOTE: Claude Code config (statusline, commands, hooks, scripts, settings) has
+# moved to the private coramdeo-config repo (author-side symlinks). dotfiles now
+# owns only ghostty + nvim. See coramdeo-skills#201 / #185.
 
 # Neovim — symlink individual items so NeoVim-generated files
 # (lazy-lock.json, plugin/, etc.) stay in ~/.config/nvim/ and don't pollute the repo
@@ -107,8 +100,6 @@ fi
 
 echo ""
 info "Done! Summary:"
-echo "  Claude /nvim cmd  → ~/.claude/commands/nvim.md"
-echo "  Claude statusline → ~/.claude/statusline-command.sh"
 echo "  Neovim init.lua   → ~/.config/nvim/init.lua"
 echo "  Neovim lua/       → ~/.config/nvim/lua/"
 [ -z "$SKIP_GHOSTTY" ] && echo "  Ghostty           → ~/.config/ghostty"
