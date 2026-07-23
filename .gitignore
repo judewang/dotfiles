@@ -8,3 +8,6 @@ ghostty/*.bak
 
 # OS files
 .DS_Store
+
+# Claude Code / worktrunk in-tree worktrees
+.claude/worktrees/
