@@ -38,6 +38,37 @@ autocmd("FileType", {
   end,
 })
 
+-- Follow symlinks to their real path.
+-- Dotfiles are symlinked out of config repos (e.g. ~/.claude/settings.json ->
+-- coramdeo-config/claude/settings.json), and path-relative tooling resolves
+-- against the buffer name: formatters look upward for biome.json/.editorconfig,
+-- git plugins look for .git. Editing via the link makes all of them miss.
+autocmd("BufReadPost", {
+  group = augroup("ResolveSymlink", { clear = true }),
+  callback = function(event)
+    if vim.bo[event.buf].buftype ~= "" then
+      return
+    end
+    local name = vim.api.nvim_buf_get_name(event.buf)
+    local real = name ~= "" and vim.uv.fs_realpath(name) or nil
+    if not real or real == name then
+      return
+    end
+    -- Re-edit under the real path so LSP and git plugins attach to it too.
+    -- Deferred: reloading inside BufReadPost re-enters filetype detection.
+    vim.schedule(function()
+      if not vim.api.nvim_buf_is_valid(event.buf) then
+        return
+      end
+      vim.api.nvim_buf_call(event.buf, function()
+        -- keepalt so the alternate file stays useful.
+        vim.cmd("keepalt file " .. vim.fn.fnameescape(real))
+        vim.cmd("edit!")
+      end)
+    end)
+  end,
+})
+
 -- Remove trailing whitespace on save
 autocmd("BufWritePre", {
   group = augroup("TrimWhitespace", { clear = true }),
