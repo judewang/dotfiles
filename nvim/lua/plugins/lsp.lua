@@ -100,6 +100,19 @@ return {
           },
         },
       })
+
+      -- Oxlint diagnostics for projects on the oxc toolchain.
+      --
+      -- Enabled by hand rather than through mason: lspconfig's oxlint config
+      -- prefers <root>/node_modules/.bin/oxlint, and these projects carry
+      -- oxlint as a devDependency, so there is nothing for mason to install
+      -- and the editor always matches the version CI runs.
+      --
+      -- It self-gates: root_markers is { ".oxlintrc.json", "oxlint.config.ts" }
+      -- with workspace_required = true, so it attaches only inside an oxc repo
+      -- and stays out of the Biome ones. Biome's server gates the same way, so
+      -- the two coexist without fighting.
+      vim.lsp.enable("oxlint")
     end,
   },
 }
