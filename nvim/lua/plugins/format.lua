@@ -1,10 +1,18 @@
 -- Web formatting is decided per repo, not globally. Some projects are on the
--- oxc toolchain (.oxfmtrc.json / .oxlintrc.json), the rest are still on Biome
--- (biome.json). Both are listed and every entry sets require_cwd, so a
--- formatter only runs in a repo that actually carries its config file and
--- migrating one project leaves the others alone.
-local web = { "oxfmt", "oxlint", "biome-check" }
-local data = { "oxfmt", "biome-check" }
+-- oxc toolchain (.oxfmtrc.json), the rest are still on Biome (biome.json).
+-- Both are listed and every entry sets require_cwd, so a formatter only runs
+-- in a repo that actually carries its config file and migrating one project
+-- leaves the others alone.
+--
+-- oxlint is deliberately absent from these chains. conform only formats here;
+-- lint fixes go through the oxlint LSP's oxc.fixAll code action
+-- (`:LspOxlintFixAll`, registered in lsp.lua). Its built-in conform entry is
+-- `stdin = false` and rewrites the file on disk, which would have to interleave
+-- with oxfmt's stdin pipeline in an order nobody has measured.
+local both = { "oxfmt", "biome-check" }
+
+-- Biome does not handle these, so there is nothing to fall back to.
+local oxfmt_only = { "oxfmt" }
 
 return {
   {
@@ -23,38 +31,25 @@ return {
     },
     opts = {
       formatters = {
-        -- Built-in cwd already resolves .oxfmtrc.json; require_cwd turns that
-        -- into a gate instead of a hint, so oxfmt never formats a Biome repo
-        -- with its own defaults.
+        -- A formatter chain runs every entry in order; require_cwd is what
+        -- turns each one into a no-op outside its own repo. The built-in cwd
+        -- resolves .oxfmtrc.json but defaults require_cwd to false, so without
+        -- this oxfmt would format Biome repos with its own defaults.
         oxfmt = { require_cwd = true },
-
-        -- The built-in definition has no cwd at all, so without this oxlint
-        -- would --fix files in every project. Gate it on .oxlintrc.json.
-        --
-        -- exit_codes: `oxlint --fix` exits 1 whenever an unfixable finding
-        -- remains, which is the normal state of a file carrying suppressed
-        -- debt. Default exit_codes is {0}, so conform would report a format
-        -- failure on nearly every save. It still applies what it can fix.
-        oxlint = {
-          cwd = require("conform.util").root_file({ ".oxlintrc.json" }),
-          require_cwd = true,
-          exit_codes = { 0, 1 },
-        },
-
         ["biome-check"] = { require_cwd = true },
       },
       formatters_by_ft = {
-        javascript = web,
-        javascriptreact = web,
-        typescript = web,
-        typescriptreact = web,
-        -- No oxlint here: it is a JS/TS linter, not a JSON tool.
-        json = data,
-        jsonc = data,
-        -- oxfmt is intentionally absent. The oxc projects here exclude CSS from
-        -- the formatter, and oxfmt passes an ignored path straight through, so
-        -- listing it would only add a no-op pass.
-        css = { "biome-check" },
+        javascript = both,
+        javascriptreact = both,
+        typescript = both,
+        typescriptreact = both,
+        json = both,
+        jsonc = both,
+        css = both,
+        scss = both,
+        yaml = oxfmt_only,
+        html = oxfmt_only,
+        markdown = oxfmt_only,
         lua = { "stylua" },
       },
       format_on_save = {

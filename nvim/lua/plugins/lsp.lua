@@ -101,18 +101,35 @@ return {
         },
       })
 
-      -- Oxlint diagnostics for projects on the oxc toolchain.
+      -- Oxlint diagnostics and lint fixes for projects on the oxc toolchain.
       --
-      -- Enabled by hand rather than through mason: lspconfig's oxlint config
-      -- prefers <root>/node_modules/.bin/oxlint, and these projects carry
-      -- oxlint as a devDependency, so there is nothing for mason to install
-      -- and the editor always matches the version CI runs.
+      -- typeAware is pinned off. lspconfig's before_init turns it on by itself
+      -- once `tsgolint` is executable and the project's .oxlintrc.json mentions
+      -- "typescript" — which ours do, in plugin and rule names. CI does not run
+      -- type-aware linting, so leaving that to autodetect means the editor
+      -- starts reporting a different rule set the day tsgolint lands on PATH.
+      -- Setting it explicitly keeps the two in step.
       --
-      -- It self-gates: root_markers is { ".oxlintrc.json", "oxlint.config.ts" }
-      -- with workspace_required = true, so it attaches only inside an oxc repo
-      -- and stays out of the Biome ones. Biome's server gates the same way, so
-      -- the two coexist without fighting.
-      vim.lsp.enable("oxlint")
+      -- fixKind is what :LspOxlintFixAll applies. safe_fix is the server's own
+      -- default, spelled out so widening it is a deliberate edit.
+      vim.lsp.config("oxlint", {
+        settings = {
+          typeAware = false,
+          fixKind = "safe_fix",
+        },
+      })
+
+      -- Both servers are enabled by hand rather than through mason: their
+      -- lspconfig entries prefer <root>/node_modules/.bin/, and these projects
+      -- carry oxlint and oxfmt as devDependencies, so there is nothing for
+      -- mason to install and the editor always matches the version CI runs.
+      --
+      -- They self-gate. oxlint's root_markers are { ".oxlintrc.json",
+      -- "oxlint.config.ts" } and oxfmt's root_dir walks up to .oxfmtrc.json,
+      -- both with workspace_required = true, so they attach only inside an oxc
+      -- repo and stay out of the Biome ones. Biome's server gates the same way,
+      -- so the two toolchains coexist without fighting.
+      vim.lsp.enable({ "oxlint", "oxfmt" })
     end,
   },
 }
