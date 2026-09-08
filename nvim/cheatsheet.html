@@ -222,7 +222,7 @@
   <div class="seg branch">
     <span> main</span>
     <span class="add">+24</span><span class="chg">~6</span>
-    <span><span class="dot" style="background:var(--blue)"></span>16 groups</span>
+    <span><span class="dot" style="background:var(--blue)"></span>17 groups</span>
   </div>
   <div class="seg file"><span class="dir">~/.config/nvim/</span><b>keymap-cheatsheet.md</b></div>
   <div class="seg meta"><span>utf-8</span><span>unix</span><span>markdown</span></div>
@@ -429,6 +429,16 @@
       <div class="row"><span class="desc"><code>dot.case</code></span><span class="keys"><kbd>g</kbd><kbd>a</kbd><kbd>.</kbd></span></div>
     </section>
 
+    <!-- CHINESE / OPENCC -->
+    <section class="card">
+      <div class="card-head">
+        <h2><span class="ic" style="background:var(--mint)"></span>中文簡繁 Chinese</h2>
+        <span class="prefix">ga z · opencc</span>
+      </div>
+      <div class="row"><span class="desc">簡體 → 繁體（台灣正體，含詞彙）<span class="sub"> · normal 整行、visual 選取範圍</span></span><span class="keys"><kbd>g</kbd><kbd>a</kbd><kbd>z</kbd><span class="mode m-v rowmode">N V</span></span></div>
+      <div class="row"><span class="desc">繁體 → 簡體<span class="sub"> · 沒綁鍵，用 ex 指令（行為單位）</span></span><span class="keys"><span class="ph">:!opencc -c tw2sp</span></span></div>
+    </section>
+
     <!-- GIT -->
     <section class="card">
       <div class="card-head">
@@ -493,11 +503,15 @@
   <div class="notes">
     <div class="note warn">
       <h3>⚠ 鍵位重疊提醒</h3>
-      <p><code>Ctrl+j</code> / <code>Ctrl+k</code> 同時被「視窗上下移動」與「展開／縮小選取」(wildfire) 綁定，依模式與載入順序決定誰生效；<code>Ctrl+k</code> / <code>Ctrl+l</code> 在 insert mode 則是 AI 接受行／字。實際行為以當下模式為準。multi-cursor 用 <code>Ctrl+N</code>（normal/visual 無內建衝突），<code>Ctrl+D</code>／<code>Ctrl+U</code> 半頁捲動完整保留。</p>
+      <p><code>Ctrl+j</code> / <code>Ctrl+k</code> 同時被「視窗上下移動」與「展開／縮小選取」(wildfire) 綁定，依模式與載入順序決定誰生效；<code>Ctrl+k</code> / <code>Ctrl+l</code> 在 insert mode 則是 AI 接受行／字。實際行為以當下模式為準。multi-cursor 用 <code>Ctrl+N</code>（normal/visual 無內建衝突），<code>Ctrl+D</code>／<code>Ctrl+U</code> 半頁捲動完整保留。<code>ga</code> 前綴由 text-case.nvim 與簡繁轉換共用：text-case 在 lazy-load 後會再註冊一批自己的 <code>ga*</code> 預設鍵（含 <code>gaS</code>、<code>gao*</code>），<code>gaz</code> 已確認不在其中。</p>
     </div>
     <div class="note">
       <h3>which-key 群組</h3>
       <p>停在 <code>Space</code> 不放會跳出提示：<code>a</code> AI · <code>b</code> Buffer · <code>c</code> Code · <code>f</code> File/Find · <code>g</code> Git（<code>gh</code> Hunks）· <code>q</code> Quit · <code>s</code> Search · <code>t</code> Terminal。</p>
+    </div>
+    <div class="note">
+      <h3>外部依賴</h3>
+      <p><code>ga z</code> 的簡繁轉換靠外部 CLI 完成，需先 <code>brew install opencc</code>。未安裝時會跳 notify，不會靜默失敗。</p>
     </div>
     <div class="note">
       <h3>來源</h3>

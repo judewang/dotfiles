@@ -79,3 +79,36 @@ vim.api.nvim_create_autocmd("LspAttach", {
     map("n", "<leader>cr", vim.lsp.buf.rename, opts("Rename symbol"))
   end,
 })
+
+-- Chinese Simplified <-> Traditional conversion (requires the `opencc` CLI)
+-- Normal mode acts on the current line, visual mode on the selection.
+local function opencc(config)
+  return function()
+    if vim.fn.executable("opencc") == 0 then
+      vim.notify("opencc not found — run `brew install opencc`", vim.log.levels.ERROR, { title = "OpenCC" })
+      return
+    end
+
+    local visual = vim.fn.mode():match("^[vV\22]") ~= nil
+    local saved = {
+      z = { vim.fn.getreg("z"), vim.fn.getregtype("z") },
+      unnamed = { vim.fn.getreg('"'), vim.fn.getregtype('"') },
+    }
+
+    vim.cmd(visual and 'noautocmd normal! "zy' or 'noautocmd normal! V"zy')
+
+    local out = vim.fn.system({ "opencc", "-c", config }, vim.fn.getreg("z"))
+    if vim.v.shell_error == 0 then
+      vim.fn.setreg("z", out, vim.fn.getregtype("z"))
+      vim.cmd('noautocmd normal! gv"zp')
+    else
+      vim.notify(out, vim.log.levels.ERROR, { title = "OpenCC" })
+    end
+
+    vim.fn.setreg("z", saved.z[1], saved.z[2])
+    vim.fn.setreg('"', saved.unnamed[1], saved.unnamed[2])
+  end
+end
+
+-- Lives here rather than in textcase.lua so it does not depend on text-case.nvim loading.
+map({ "n", "v" }, "gaz", opencc("s2twp"), { desc = "To Traditional Chinese (TW)" })
