@@ -51,10 +51,6 @@ return {
         float = { border = "rounded" },
       })
 
-      -- LSP hover/signature window borders
-      vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { border = "rounded" })
-      vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, { border = "rounded" })
-
       -- Server-specific configs via vim.lsp.config (Neovim 0.11 API)
       vim.lsp.config("lua_ls", {
         settings = {
