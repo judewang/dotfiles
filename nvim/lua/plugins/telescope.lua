@@ -23,7 +23,7 @@ return {
       { "<leader>sk", "<cmd>Telescope keymaps<CR>", desc = "Keymaps" },
       { "<leader>sw", "<cmd>Telescope grep_string<CR>", desc = "Search word under cursor" },
       { "<leader>ss", "<cmd>Telescope lsp_document_symbols<CR>", desc = "Document symbols" },
-      { "<leader>sS", "<cmd>Telescope lsp_workspace_symbols<CR>", desc = "Workspace symbols" },
+      { "<leader>sS", "<cmd>Telescope lsp_dynamic_workspace_symbols<CR>", desc = "Workspace symbols" },
       { "<leader>?", "<cmd>Telescope keymaps<CR>", desc = "Buffer keymaps" },
     },
     opts = {
