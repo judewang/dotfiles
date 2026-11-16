@@ -72,7 +72,9 @@ vim.api.nvim_create_autocmd("LspAttach", {
     map("n", "gD", vim.lsp.buf.declaration, opts("Go to declaration"))
     map("n", "gr", vim.lsp.buf.references, opts("Go to references"))
     map("n", "gi", vim.lsp.buf.implementation, opts("Go to implementation"))
-    map("n", "K", vim.lsp.buf.hover, opts("Hover documentation"))
+    -- Borders are passed per call: the vim.lsp.with() handler override is deprecated.
+    map("n", "K", function() vim.lsp.buf.hover({ border = "rounded" }) end, opts("Hover documentation"))
+    map("i", "<C-s>", function() vim.lsp.buf.signature_help({ border = "rounded" }) end, opts("Signature help"))
     map("n", "<F2>", vim.lsp.buf.rename, opts("Rename symbol"))
     map("n", "<F12>", vim.lsp.buf.definition, opts("Go to definition"))
     map({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, opts("Code action"))
